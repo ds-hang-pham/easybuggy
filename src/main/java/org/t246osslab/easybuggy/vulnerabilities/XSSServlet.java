@@ -11,6 +11,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringUtils;
 import org.t246osslab.easybuggy.core.servlets.AbstractServlet;
 import org.apache.commons.text.StringEscapeUtils;
+import java.util.regex.*;
+import org.apache.commons.validator.routines.UrlValidator;
 
 @SuppressWarnings("serial")
 @WebServlet(urlPatterns = { "/xss" })
@@ -20,6 +22,21 @@ public class XSSServlet extends AbstractServlet {
         String escapeString = StringEscapeUtils.escapeHtml4(input);
         return escapeString;
 	}
+
+    public Boolean isUrl(String input) {
+        String regex = "(?:src|href)=\"(.*?)\"";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(input);
+        String url = null;
+        if (matcher.find()) {
+            url = matcher.group(1);
+        }
+        if(!StringUtils.isBlank(url)) {
+        	UrlValidator urlValidator = new UrlValidator();
+        	return urlValidator.isValid(url);
+        } 
+         return true;
+    }
 	
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
@@ -43,8 +60,12 @@ public class XSSServlet extends AbstractServlet {
                 // Reverse the given string
                 String reversedName = StringUtils.reverse(string);
                 String escapeString = changeInput(reversedName);
-                bodyHtml.append(getMsg("label.reversed.string", locale) + " : "
-                        + escapeString);
+                if(isUrl(escapeString)) {
+                    bodyHtml.append(getMsg("label.reversed.string", locale) + " : "
+                            + escapeString);
+                } else {
+                	bodyHtml.append(getMsg("msg.enter.string", locale));
+                }
             } else {
                 bodyHtml.append(getMsg("msg.enter.string", locale));
             }
