@@ -10,18 +10,24 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
 import org.t246osslab.easybuggy.core.servlets.AbstractServlet;
+import org.apache.commons.text.StringEscapeUtils;
 
 @SuppressWarnings("serial")
 @WebServlet(urlPatterns = { "/xss" })
 public class XSSServlet extends AbstractServlet {
-
+	
+	public String changeInput(String input)  {
+        String escapeString = StringEscapeUtils.escapeHtml4(input);
+        return escapeString;
+	}
+	
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
 
         try {
             String string = req.getParameter("string");
             Locale locale = req.getLocale();
-
+            
             StringBuilder bodyHtml = new StringBuilder();
 
             bodyHtml.append("<form action=\"xss\" method=\"post\">");
@@ -36,8 +42,9 @@ public class XSSServlet extends AbstractServlet {
             if (!StringUtils.isBlank(string)) {
                 // Reverse the given string
                 String reversedName = StringUtils.reverse(string);
+                String escapeString = changeInput(reversedName);
                 bodyHtml.append(getMsg("label.reversed.string", locale) + " : "
-                        + reversedName);
+                        + escapeString);
             } else {
                 bodyHtml.append(getMsg("msg.enter.string", locale));
             }
