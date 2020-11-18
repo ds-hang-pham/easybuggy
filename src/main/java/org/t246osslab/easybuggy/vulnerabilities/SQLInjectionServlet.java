@@ -3,7 +3,7 @@ package org.t246osslab.easybuggy.vulnerabilities;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.Locale;
 
 import javax.servlet.ServletException;
@@ -60,14 +60,20 @@ public class SQLInjectionServlet extends AbstractServlet {
     private String selectUsers(String name, String password, HttpServletRequest req) {
         
         Connection conn = null;
-        Statement stmt = null;
+        PreparedStatement stmt = null;
         ResultSet rs = null;
         String result = getErrMsg("msg.error.user.not.exist", req.getLocale());
         try {
             conn = DBClient.getConnection();
-            stmt = conn.createStatement();
-            rs = stmt.executeQuery("SELECT name, secret FROM users WHERE ispublic = 'true' AND name='" + name
-                    + "' AND password='" + password + "'");
+//            stmt = conn.createStatement();
+//            rs = stmt.executeQuery("SELECT name, secret FROM users WHERE ispublic = 'true' AND name='" + name
+//                    + "' AND password='" + password + "'");
+            String sql = "SELECT name, secret FROM users WHERE ispublic = 'true' AND name='" + name + "' AND password='" + password + "'";
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, name);
+            stmt.setString(2, password);
+            
+            rs = stmt.executeQuery();
             StringBuilder sb = new StringBuilder();
             while (rs.next()) {
                 sb.append("<tr><td>" + rs.getString("name") + "</td><td>" + rs.getString("secret") + "</td></tr>");
